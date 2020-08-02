@@ -161,8 +161,11 @@ def article_textcount(url):
         print("成功")
 
         for i in range(0, 8):
-            m = res.most_common()[i]
-            print("単語: {0}\t出現回数: {1}".format(m[0], m[1]))
+            try:
+                m = res.most_common()[i]
+                print("単語: {0}\t出現回数: {1}".format(m[0], m[1]))
+            except IndexError:
+                break
         print("")
 
     return all_words
@@ -193,8 +196,11 @@ all_words = article_textcount(url)
 print("記事全体での出現回数")
 c = collections.Counter(all_words)
 for i in range(10):
-    m = c.most_common()[i]
-    print("単語: {0}\t出現回数: {1}".format(m[0], m[1]))
+    try:
+        m = c.most_common()[i]
+        print("単語: {0}\t出現回数: {1}".format(m[0], m[1]))
+    except IndexError:
+        break
 
 
 
