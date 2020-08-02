@@ -118,7 +118,7 @@ def text_analyze8count(text, all_words):
         h = token.part_of_speech
         h = h.split(',')
 
-        if '名詞'in h[0] and '一般' in h[1]:
+        if '名詞'in h[0] and ('一般' in h[1] or '固有名詞' in h[1]):
             word.append(token.surface)
             all_words.append(token.surface)
 
