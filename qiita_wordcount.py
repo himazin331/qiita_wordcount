@@ -3,8 +3,8 @@ import re
 
 from janome.tokenizer import Tokenizer
 from janome.analyzer import Analyzer
-from janome.charfilter import *
-from janome.tokenfilter import *
+from janome.charfilter import UnicodeNormalizeCharFilter
+from janome.tokenfilter import LowerCaseFilter
 import collections
 
 import http.client
@@ -12,13 +12,14 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
+
 # 投稿記事URL取得
 def article_urlget(user_name, item_num):
 
     print("投稿記事URL取得試行中...", end="")
 
-    page = "1" # ページ番号
-    par_page = "100" # 1ページあたりの最大記事数
+    page = "1"  # ページ番号
+    par_page = "100"  # 1ページあたりの最大記事数
 
     # HTML取得(Qiita APIを叩く)
     conn = http.client.HTTPSConnection("qiita.com", 443)
@@ -31,14 +32,14 @@ def article_urlget(user_name, item_num):
         print("ステータスコード:" + str(r.status))
         sys.exit()
 
-    data = r.read().decode("utf-8") # UTF-8デコード
-    jsonstr = json.loads(data) # 文字列からJSON形式に変換
+    data = r.read().decode("utf-8")  # UTF-8デコード
+    jsonstr = json.loads(data)  # 文字列からJSON形式に変換
 
     # URLを取得
     url = {}
     for num in range(item_num):
         try:
-            title = jsonstr[num]['title'] # 記事タイトル取得
+            title = jsonstr[num]['title']  # 記事タイトル取得
 
             url[title] = jsonstr[num]['url']
         except IndexError:
@@ -49,6 +50,7 @@ def article_urlget(user_name, item_num):
     print("")
 
     return url
+
 
 # 文字列取得
 def text_get(soup):
@@ -61,17 +63,17 @@ def text_get(soup):
         return text_list
 
     # 各要素取得
-    h1tags = soup.find_all('h1') # h1タグ
-    h2tags = soup.find_all('h2') # h2タグ
-    h3tags = soup.find_all('h3') # h3タグ
-    h4tags = soup.find_all('h4') # h4タグ
-    h5tags = soup.find_all('h5') # h5タグ
-    h6tags = soup.find_all('h6') # h6タグ
+    h1tags = soup.find_all('h1')  # h1タグ
+    h2tags = soup.find_all('h2')  # h2タグ
+    h3tags = soup.find_all('h3')  # h3タグ
+    h4tags = soup.find_all('h4')  # h4タグ
+    h5tags = soup.find_all('h5')  # h5タグ
+    h6tags = soup.find_all('h6')  # h6タグ
 
     # codeタグを除去
     for p in soup.find_all('code'):
         p.decompose()
-    ptags = soup.find_all('p') # pタグ
+    ptags = soup.find_all('p')  # pタグ
 
     # 文字列を格納
     text_list = []
@@ -91,7 +93,7 @@ def text_get(soup):
         text_list.append(ptags[i])
 
     # 空白文字などの除去
-    text = "\n".join(text_list) # リスト->文字列
+    text = "\n".join(text_list)  # リスト->文字列
     table = str.maketrans({
         '\u3000': '',
         ' ': '',
@@ -100,6 +102,7 @@ def text_get(soup):
     text = text.translate(table)
 
     return text
+
 
 # 形態素解析&カウント
 def text_analyze8count(text, all_words):
@@ -114,11 +117,10 @@ def text_analyze8count(text, all_words):
     # 大分類:名詞,小分類:一般の単語を取得
     word = []
     for token in a.analyze(text):
-
         h = token.part_of_speech
         h = h.split(',')
 
-        if '名詞'in h[0] and ('一般' in h[1] or '固有名詞' in h[1]):
+        if '名詞' in h[0] and ('一般' in h[1] or '固有名詞' in h[1]):
             word.append(token.surface)
             all_words.append(token.surface)
 
@@ -127,13 +129,12 @@ def text_analyze8count(text, all_words):
 
     return c
 
+
 # 各記事中の単語の出現回数カウント
 def article_textcount(url):
-
     all_words = []
 
     for key, item in url.items():
-
         print("記事\"" + key + "\"の内容を取得中...", end='')
 
         # HTML取得
@@ -146,7 +147,6 @@ def article_textcount(url):
             sys.exit()
         else:
             print("成功")
-
         print("記事\"" + key + "\"中の形態素を解析中...", end='')
 
         # HTML解析
@@ -169,6 +169,7 @@ def article_textcount(url):
         print("")
 
     return all_words
+
 
 # Qiitaユーザー名入力
 user_name = ''
@@ -201,14 +202,3 @@ for i in range(10):
         print("単語: {0}\t出現回数: {1}".format(m[0], m[1]))
     except IndexError:
         break
-
-
-
-#参考
-#https://qiita.com/poorko/items/9140c75415d748633a10
-#https://qiita.com/mountain-mouth1132ky/items/f3951210749df1762f8f
-#https://qiita.com/shimajiroxyz/items/1ecbae20cb5173761f4f
-#https://qiita.com/fkooo/items/250f42a0b641fb96b5ff
-#https://detail.chiebukuro.yahoo.co.jp/qa/question_detail/q10117084940
-#https://mocobeta.github.io/janome/api/janome.html
-#https://mocobeta.github.io/slides-html/janome-tutorial/tutorial-slides.html#(1)
